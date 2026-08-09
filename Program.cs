@@ -38,11 +38,11 @@ class Program
                 if (content == "")
                 {
                     Console.Error.WriteLine("There are no contents.");
-                } else {
-                    ClipboardService.SetText(content);
-                    Console.WriteLine("Copied to clipboard");
+                    continue;
                 }
-                continue;
+                ClipboardService.SetText(content);
+                Console.WriteLine("Copied to clipboard");
+                break;
             }
             content += FileViewer.Show(selected);
         }
