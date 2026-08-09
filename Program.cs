@@ -7,6 +7,7 @@ using TextCopy;
 class Program
 {
     const string CopyCommand = "/copy";
+    const string ExitCommand = "/exit";
     const string BackCommand = "..";
 
     static void Main()
@@ -31,8 +32,11 @@ class Program
                 .Select(e => Directory.Exists(Path.Combine(currentDir, e)) ? e + "/" : e)
                 .ToList();
             if (currentDir != ".")
+            {
                 items.Insert(0, BackCommand);
+            }
             items.Add(CopyCommand);
+            items.Add(ExitCommand);
 
             string selected = Prompt.Select("Please select a file", items: items);
 
@@ -41,6 +45,11 @@ class Program
             Console.SetCursorPosition(0, line - 1);
             Console.Write(new string(' ', Console.WindowWidth));
             Console.SetCursorPosition(0, line - 1);
+
+            if (selected == ExitCommand)
+            {
+                break;
+            }
 
             if (selected == CopyCommand)
             {
