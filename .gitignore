@@ -1,0 +1,15 @@
+# misc
+.vscode
+.DS_Store
+
+# .NET / C#
+bin/
+obj/
+*.nupkg
+*.snupkg
+packages/
+TestResults/
+*.trx
+.env
+.env.*
+!.env.example
