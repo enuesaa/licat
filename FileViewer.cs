@@ -1,16 +1,17 @@
 using System;
 using System.IO;
 using System.Text;
-using TextCopy;
 
 class FileViewer
 {
-    public static void Show(string path)
+    public static string? Show(string path)
     {
         try
         {
             var sb = new StringBuilder();
-            Console.WriteLine($"=== {path} ===");
+            string header = $"# === {path} ===";
+            Console.WriteLine(header);
+            sb.AppendLine(header);
 
             using var reader = new StreamReader(path);
             string? line;
@@ -20,17 +21,17 @@ class FileViewer
                 sb.AppendLine(line);
             }
             Console.WriteLine();
-
-            ClipboardService.SetText(sb.ToString());
-            Console.WriteLine("(clipboard へコピーしました)");
+            return sb.ToString();
         }
         catch (FileNotFoundException)
         {
             Console.Error.WriteLine($"file not found: {path}");
+            return null;
         }
         catch (Exception ex)
         {
             Console.Error.WriteLine($"err: {ex.Message}");
+            return null;
         }
     }
 }
