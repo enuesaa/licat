@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Text;
+using TextCopy;
 
 class FileViewer
 {
@@ -7,6 +9,7 @@ class FileViewer
     {
         try
         {
+            var sb = new StringBuilder();
             Console.WriteLine($"=== {path} ===");
 
             using var reader = new StreamReader(path);
@@ -14,8 +17,12 @@ class FileViewer
             while ((line = reader.ReadLine()) != null)
             {
                 Console.WriteLine(line);
+                sb.AppendLine(line);
             }
             Console.WriteLine();
+
+            ClipboardService.SetText(sb.ToString());
+            Console.WriteLine("(clipboard へコピーしました)");
         }
         catch (FileNotFoundException)
         {
