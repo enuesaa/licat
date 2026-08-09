@@ -7,27 +7,33 @@ using TextCopy;
 class Program
 {
     const string CopyCommand = "/copy";
+    const string BackCommand = "..";
 
     static void Main()
     {
-        // var files = Directory.GetFiles(".")
-        //     .Select(f => f.StartsWith("./") ? f[2..] : f)
-        //     .ToArray();
-        var files = Directory.GetFiles(".", "*", SearchOption.AllDirectories)
-            .Select(f => f.StartsWith("./") ? f[2..] : f)
-            .ToArray();
-
-        if (files.Length == 0)
-        {
-            Console.Error.WriteLine("There are no files here.");
-            Environment.Exit(1);
-        }
-
         string content = "";
+        string currentDir = ".";
 
         while (true)
         {
-            var items = files.Append(CopyCommand).ToArray();
+            var entries = Directory.GetFileSystemEntries(currentDir)
+                .Select(f => Path.GetFileName(f))
+                .OrderBy(f => f)
+                .ToArray();
+
+            if (entries.Length == 0)
+            {
+                Console.Error.WriteLine("There are no files here.");
+                Environment.Exit(1);
+            }
+
+            var items = entries
+                .Select(e => Directory.Exists(Path.Combine(currentDir, e)) ? e + "/" : e)
+                .ToList();
+            if (currentDir != ".")
+                items.Insert(0, BackCommand);
+            items.Add(CopyCommand);
+
             string selected = Prompt.Select("Please select a file", items: items);
 
             // remove prompt
@@ -47,7 +53,22 @@ class Program
                 Console.WriteLine("Copied to clipboard");
                 break;
             }
-            content += FileViewer.Show(selected);
+
+            if (selected == BackCommand)
+            {
+                currentDir = Path.GetDirectoryName(currentDir) is { Length: > 0 } parent
+                    ? parent
+                    : ".";
+                continue;
+            }
+            string fullPath = Path.Combine(currentDir, selected.TrimEnd('/'));
+
+            if (Directory.Exists(fullPath))
+            {
+                currentDir = fullPath;
+                continue;
+            }
+            content += FileViewer.Show(fullPath);
         }
     }
 }
