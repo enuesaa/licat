@@ -10,7 +10,10 @@ class Program
 
     static void Main()
     {
-        var files = Directory.GetFiles(".")
+        // var files = Directory.GetFiles(".")
+        //     .Select(f => f.StartsWith("./") ? f[2..] : f)
+        //     .ToArray();
+        var files = Directory.GetFiles(".", "*", SearchOption.AllDirectories)
             .Select(f => f.StartsWith("./") ? f[2..] : f)
             .ToArray();
 
