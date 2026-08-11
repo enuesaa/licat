@@ -6,8 +6,6 @@ using TextCopy;
 class Program
 {
     const string BackCommand = "..";
-    const string CopyCommand = "/copy";
-    const string ExitCommand = "/exit";
 
     static void Main()
     {
@@ -39,16 +37,15 @@ class Program
             {
                 items.Insert(0, (BackCommand, true));
             }
-            items.Add((CopyCommand, false));
-            items.Add((ExitCommand, false));
+            items.Add(("@c", false));
 
             var selected = Menu.Select(items, "Please select");
 
-            if (selected == null || selected == ExitCommand)
+            if (selected == null)
             {
                 break;
             }
-            if (selected == CopyCommand)
+            if (selected == "@c")
             {
                 if (content == "")
                 {

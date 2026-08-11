@@ -22,7 +22,6 @@ static class Menu
 
                 if (!firstRender)
                 {
-                    // 前回描画したブロックの先頭まで戻り、そこから画面末尾まで丸ごとクリア
                     Console.Write($"\x1b[{height}F\x1b[0J");
                 }
                 firstRender = false;
@@ -98,14 +97,13 @@ static class Menu
                 var (name, isDir) = filtered[i];
                 Console.Write(i == index ? "> " : "  ");
                 if (isDir) Console.ForegroundColor = ConsoleColor.Cyan;
+                else if (name == "@c") Console.ForegroundColor = ConsoleColor.DarkYellow;
                 Console.Write(name);
                 Console.ResetColor();
                 Console.WriteLine();
                 lines++;
             }
         }
-        Console.ForegroundColor = ConsoleColor.DarkGray;
-        Console.ResetColor();
 
         return lines;
     }
