@@ -1,57 +1,49 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using Sharprompt;
 using TextCopy;
 
 class Program
 {
-    const string CopyCommand = "/copy";
-    const string ExitCommand = "/exit";
     const string BackCommand = "..";
 
     static void Main()
     {
         string content = "";
         string currentDir = ".";
-
         while (true)
         {
             var entries = Directory.GetFileSystemEntries(currentDir)
-                .Select(f => Path.GetFileName(f))
-                .OrderBy(f => f)
+                .Select(f => Path.GetFileName(f)!)
                 .ToArray();
-
             if (entries.Length == 0)
             {
                 Console.Error.WriteLine("There are no files here.");
                 Environment.Exit(1);
             }
 
-            var items = entries
-                .Select(e => Directory.Exists(Path.Combine(currentDir, e)) ? e + "/" : e)
-                .ToList();
+            var dirs = entries
+                .Where(e => Directory.Exists(Path.Combine(currentDir, e)))
+                .OrderBy(e => e)
+                .Select(e => (Name: e + "/", IsDir: true));
+            var files = entries
+                .Where(e => !Directory.Exists(Path.Combine(currentDir, e)))
+                .OrderBy(e => e)
+                .Select(e => (Name: e, IsDir: false));
+
+            var items = dirs.Concat(files).ToList();
             if (currentDir != ".")
             {
-                items.Insert(0, BackCommand);
+                items.Insert(0, (BackCommand, true));
             }
-            items.Add(CopyCommand);
-            items.Add(ExitCommand);
 
-            string selected = Prompt.Select("Please select a file", items: items);
+            var result = Menu.Select(items, "Please select a file");
 
-            // remove prompt
-            int line = Console.CursorTop;
-            Console.SetCursorPosition(0, line - 1);
-            Console.Write(new string(' ', Console.WindowWidth));
-            Console.SetCursorPosition(0, line - 1);
-
-            if (selected == ExitCommand)
+            if (result.Action == MenuAction.Exit)
             {
                 break;
             }
-
-            if (selected == CopyCommand)
+            if (result.Action == MenuAction.Copy)
             {
                 if (content == "")
                 {
@@ -63,6 +55,7 @@ class Program
                 break;
             }
 
+            string selected = result.Value!;
             if (selected == BackCommand)
             {
                 currentDir = Path.GetDirectoryName(currentDir) is { Length: > 0 } parent
@@ -70,14 +63,15 @@ class Program
                     : ".";
                 continue;
             }
-            string fullPath = Path.Combine(currentDir, selected.TrimEnd('/'));
 
+            string fullPath = Path.Combine(currentDir, selected.TrimEnd('/'));
             if (Directory.Exists(fullPath))
             {
                 currentDir = fullPath;
                 continue;
             }
             content += FileViewer.Show(fullPath);
+            currentDir = ".";
         }
     }
 }
