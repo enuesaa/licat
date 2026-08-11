@@ -12,10 +12,13 @@ jobs:
         include:
           - os: ubuntu-latest
             rid: linux-x64
+            as: linux-x64
           - os: ubuntu-latest
             rid: linux-arm64
+            as: linux-arm64
           - os: macos-latest
             rid: osx-arm64
+            as: aarch64-apple-darwin
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -24,17 +27,17 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - run: dotnet publish licat.csproj -c Release -r ${{ matrix.rid }} --self-contained -p:PublishSingleFile=true -o ./publish/${{ matrix.rid }}
+      - run: dotnet publish licat.csproj -c Release -r ${{ matrix.rid }} --self-contained -p:PublishSingleFile=true -o ./publish/${{ matrix.as }}
 
       - shell: bash
         run: |
-          cd ./publish/${{ matrix.rid }}
-          tar czf ../../licat-${{ matrix.rid }}.tar.gz .
+          cd ./publish/${{ matrix.as }}
+          tar czf ../../licat-${{ matrix.as }}.tar.gz .
 
       - uses: actions/upload-artifact@v4
         with:
-          name: licat-${{ matrix.rid }}
-          path: licat-${{ matrix.rid }}.*
+          name: licat-${{ matrix.as }}
+          path: licat-${{ matrix.as }}.*
 
   release:
     needs: build
