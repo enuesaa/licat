@@ -12,6 +12,9 @@ class Program
 
     static void Main()
     {
+        // show cursor after ctrl+c
+        Console.CancelKeyPress += (_, _) => Console.CursorVisible = true;
+
         string content = "";
         string currentDir = ".";
         string rootDir = Path.GetFullPath(".");
