@@ -1,4 +1,7 @@
 ﻿using System;
+using System.CommandLine;
+using System.CommandLine.Help;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using LibGit2Sharp;
@@ -10,7 +13,22 @@ class Program
     const string CopyCommand = "@c";
     const string ShowAllCommand = "@showall";
 
-    static void Main()
+    static int Main(string[] args)
+    {
+        // do not translate
+        CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
+
+        var rootCommand = new RootCommand("licat --- browse files and copy their contents");
+
+        var helpOption = rootCommand.Options.OfType<HelpOption>().First();
+        helpOption.Aliases.Remove("-?");
+        helpOption.Aliases.Remove("/?");
+
+        rootCommand.SetAction(_ => Run());
+        return rootCommand.Parse(args).Invoke();
+    }
+
+    static void Run()
     {
         // show cursor after ctrl+c
         Console.CancelKeyPress += (_, _) => Console.CursorVisible = true;
