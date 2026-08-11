@@ -6,6 +6,8 @@ using TextCopy;
 class Program
 {
     const string BackCommand = "..";
+    const string CopyCommand = "/copy";
+    const string ExitCommand = "/exit";
 
     static void Main()
     {
@@ -36,14 +38,16 @@ class Program
             {
                 items.Insert(0, (BackCommand, true));
             }
+            items.Add((CopyCommand, false));
+            items.Add((ExitCommand, false));
 
-            var result = Menu.Select(items, "Please select a file");
+            var selected = Menu.Select(items, "Please select");
 
-            if (result.Action == MenuAction.Exit)
+            if (selected == null || selected == ExitCommand)
             {
                 break;
             }
-            if (result.Action == MenuAction.Copy)
+            if (selected == CopyCommand)
             {
                 if (content == "")
                 {
@@ -54,8 +58,6 @@ class Program
                 Console.WriteLine("Copied to clipboard");
                 break;
             }
-
-            string selected = result.Value!;
             if (selected == BackCommand)
             {
                 currentDir = Path.GetDirectoryName(currentDir) is { Length: > 0 } parent

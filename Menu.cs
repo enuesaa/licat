@@ -1,53 +1,76 @@
 using System;
 using System.Collections.Generic;
-
-enum MenuAction { Select, Copy, Exit }
-
-readonly struct MenuResult
-{
-    public MenuAction Action { get; init; }
-    public string? Value { get; init; }
-}
+using System.Linq;
 
 static class Menu
 {
-    public static MenuResult Select(List<(string Name, bool IsDir)> items, string title)
+    public static string? Select(List<(string Name, bool IsDir)> items, string title)
     {
+        string filter = "";
         int index = 0;
+        int height = 0;
         bool firstRender = true;
         Console.CursorVisible = false;
         try
         {
             while (true)
             {
+                var filtered = items
+                    .Where(i => i.Name.Contains(filter, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+                if (index >= filtered.Count) index = Math.Max(0, filtered.Count - 1);
+
                 if (!firstRender)
                 {
-                    // 直前の描画行数ぶんだけ相対的に巻き戻す(絶対座標は使わない)
-                    Console.SetCursorPosition(0, Console.CursorTop - (items.Count + 2));
+                    // 前回描画したブロックの先頭まで戻り、そこから画面末尾まで丸ごとクリア
+                    Console.Write($"\x1b[{height}F\x1b[0J");
                 }
                 firstRender = false;
 
-                Render(items, index, title);
+                height = Render(filtered, index, title, filter);
 
                 var key = Console.ReadKey(intercept: true);
                 switch (key.Key)
                 {
                     case ConsoleKey.UpArrow:
-                        index = (index - 1 + items.Count) % items.Count;
+                        if (filtered.Count > 0) index = (index - 1 + filtered.Count) % filtered.Count;
                         break;
                     case ConsoleKey.DownArrow:
-                        index = (index + 1) % items.Count;
+                        if (filtered.Count > 0) index = (index + 1) % filtered.Count;
+                        break;
+                    case ConsoleKey.Backspace:
+                        if (filter.Length > 0)
+                        {
+                            filter = filter[..^1];
+                            index = 0;
+                        }
+                        break;
+                    case ConsoleKey.Escape:
+                        if (filter.Length > 0)
+                        {
+                            filter = "";
+                            index = 0;
+                        }
+                        else
+                        {
+                            Console.Write($"\x1b[{height}F\x1b[0J");
+                            return null;
+                        }
                         break;
                     case ConsoleKey.Enter:
-                        ClearCurrent(items.Count);
-                        return new MenuResult { Action = MenuAction.Select, Value = items[index].Name };
-                    case ConsoleKey.C:
-                        ClearCurrent(items.Count);
-                        return new MenuResult { Action = MenuAction.Copy };
-                    case ConsoleKey.Q:
-                    case ConsoleKey.Escape:
-                        ClearCurrent(items.Count);
-                        return new MenuResult { Action = MenuAction.Exit };
+                        if (filtered.Count > 0)
+                        {
+                            Console.Write($"\x1b[{height}F\x1b[0J");
+                            return filtered[index].Name;
+                        }
+                        break;
+                    default:
+                        if (!char.IsControl(key.KeyChar))
+                        {
+                            filter += key.KeyChar;
+                            index = 0;
+                        }
+                        break;
                 }
             }
         }
@@ -57,34 +80,33 @@ static class Menu
         }
     }
 
-    static void Render(List<(string Name, bool IsDir)> items, int index, string title)
+    static int Render(List<(string Name, bool IsDir)> filtered, int index, string title, string filter)
     {
-        Console.WriteLine(Pad(title));
-        for (int i = 0; i < items.Count; i++)
+        int lines = 0;
+        Console.WriteLine($"{title}: {filter}");
+        lines++;
+
+        if (filtered.Count == 0)
         {
-            var (name, isDir) = items[i];
-            Console.Write(i == index ? "> " : "  ");
-            if (isDir) Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.Write(name);
-            Console.ResetColor();
-            Console.WriteLine(new string(' ', Math.Max(0, Console.WindowWidth - name.Length - 2)));
+            Console.WriteLine("  no matches");
+            lines++;
+        }
+        else
+        {
+            for (int i = 0; i < filtered.Count; i++)
+            {
+                var (name, isDir) = filtered[i];
+                Console.Write(i == index ? "> " : "  ");
+                if (isDir) Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.Write(name);
+                Console.ResetColor();
+                Console.WriteLine();
+                lines++;
+            }
         }
         Console.ForegroundColor = ConsoleColor.DarkGray;
-        Console.WriteLine(Pad("[enter] open   [c] copy   [q] exit"));
         Console.ResetColor();
-    }
 
-    static string Pad(string s) => s.PadRight(Math.Max(s.Length, Console.WindowWidth));
-
-    static void ClearCurrent(int itemCount)
-    {
-        // 描画した分だけ上に戻ってから空白で消す
-        Console.SetCursorPosition(0, Console.CursorTop - (itemCount + 2));
-        for (int i = 0; i < itemCount + 2; i++)
-        {
-            Console.Write(new string(' ', Console.WindowWidth));
-            Console.WriteLine();
-        }
-        Console.SetCursorPosition(0, Console.CursorTop - (itemCount + 2));
+        return lines;
     }
 }
