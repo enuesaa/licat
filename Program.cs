@@ -36,7 +36,10 @@ class Program
         string content = "";
         string currentDir = ".";
         string rootDir = Path.GetFullPath(".");
-        using var repo = Repository.IsValid(rootDir) ? new Repository(rootDir) : null;
+
+        string? gitDir = Repository.Discover(rootDir);
+        using var repo = gitDir != null ? new Repository(gitDir) : null;
+
         bool showAll = false;
 
         while (true)
@@ -48,7 +51,7 @@ class Program
                 {
                     if (showAll || repo == null) return true;
                     string full = Path.GetFullPath(Path.Combine(currentDir, f));
-                    string relPath = Path.GetRelativePath(rootDir, full).Replace('\\', '/');
+                    string relPath = Path.GetRelativePath(repo.Info.WorkingDirectory, full).Replace('\\', '/');
                     return !repo.Ignore.IsPathIgnored(relPath);
                 })
                 .ToArray();
