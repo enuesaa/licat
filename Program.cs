@@ -7,6 +7,8 @@ using TextCopy;
 class Program
 {
     const string BackCommand = "..";
+    const string CopyCommand = "@c";
+    const string ShowAllCommand = "@showall";
 
     static void Main()
     {
@@ -14,6 +16,7 @@ class Program
         string currentDir = ".";
         string rootDir = Path.GetFullPath(".");
         using var repo = Repository.IsValid(rootDir) ? new Repository(rootDir) : null;
+        bool showAll = false;
 
         while (true)
         {
@@ -22,7 +25,7 @@ class Program
                 .Where(f => f != ".git")
                 .Where(f =>
                 {
-                    if (repo == null) return true;
+                    if (showAll || repo == null) return true;
                     string full = Path.GetFullPath(Path.Combine(currentDir, f));
                     string relPath = Path.GetRelativePath(rootDir, full).Replace('\\', '/');
                     return !repo.Ignore.IsPathIgnored(relPath);
@@ -49,7 +52,8 @@ class Program
             {
                 items.Insert(0, (BackCommand, true));
             }
-            items.Add(("@c", false));
+            items.Add((CopyCommand, false));
+            items.Add((ShowAllCommand, false));
 
             var selected = Menu.Select(items, "Please select");
 
@@ -57,7 +61,12 @@ class Program
             {
                 break;
             }
-            if (selected == "@c")
+            if (selected == ShowAllCommand)
+            {
+                showAll = !showAll;
+                continue;
+            }
+            if (selected == CopyCommand)
             {
                 if (content == "")
                 {

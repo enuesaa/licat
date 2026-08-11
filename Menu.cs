@@ -98,6 +98,7 @@ static class Menu
                 Console.Write(i == index ? "> " : "  ");
                 if (isDir) Console.ForegroundColor = ConsoleColor.Cyan;
                 else if (name == "@c") Console.ForegroundColor = ConsoleColor.DarkYellow;
+                else if (name == "@showall") Console.ForegroundColor = ConsoleColor.DarkYellow;
                 Console.Write(name);
                 Console.ResetColor();
                 Console.WriteLine();
