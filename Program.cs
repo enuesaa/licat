@@ -17,6 +17,7 @@ class Program
         {
             var entries = Directory.GetFileSystemEntries(currentDir)
                 .Select(f => Path.GetFileName(f)!)
+                .Where(f => f != ".git")
                 .ToArray();
             if (entries.Length == 0)
             {
