@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using LibGit2Sharp;
 using TextCopy;
 
 class Program
@@ -11,12 +12,23 @@ class Program
     {
         string content = "";
         string currentDir = ".";
+        string rootDir = Path.GetFullPath(".");
+        using var repo = Repository.IsValid(rootDir) ? new Repository(rootDir) : null;
+
         while (true)
         {
             var entries = Directory.GetFileSystemEntries(currentDir)
                 .Select(f => Path.GetFileName(f)!)
                 .Where(f => f != ".git")
+                .Where(f =>
+                {
+                    if (repo == null) return true;
+                    string full = Path.GetFullPath(Path.Combine(currentDir, f));
+                    string relPath = Path.GetRelativePath(rootDir, full).Replace('\\', '/');
+                    return !repo.Ignore.IsPathIgnored(relPath);
+                })
                 .ToArray();
+
             if (entries.Length == 0)
             {
                 Console.Error.WriteLine("There are no files here.");
