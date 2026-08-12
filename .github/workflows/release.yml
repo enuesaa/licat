@@ -19,6 +19,9 @@ jobs:
           - os: macos-latest
             rid: osx-arm64
             as: aarch64-apple-darwin
+          - os: macos-13
+            rid: osx-x64
+            as: x86_64-apple-darwin
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
