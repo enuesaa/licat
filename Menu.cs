@@ -66,6 +66,18 @@ static class Menu
                     default:
                         if (!char.IsControl(key.KeyChar))
                         {
+                            if (key.KeyChar == '/')
+                            {
+                                var match = items.FirstOrDefault(i =>
+                                    i.IsDir && string.Equals(i.Name.TrimEnd('/'), filter, StringComparison.OrdinalIgnoreCase));
+
+                                if (match.Name != null)
+                                {
+                                    Console.Write($"\x1b[{height}F\x1b[0J");
+                                    return match.Name;
+                                }
+                            }
+
                             filter += key.KeyChar;
                             index = 0;
                         }
