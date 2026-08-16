@@ -79,7 +79,7 @@ class Program
             items.Add((CopyCommand, false));
             items.Add((ShowAllCommand, false));
 
-            var selected = Menu.Select(items, "Please select");
+            var selected = Menu.Select(items, "Select");
 
             if (selected == null)
             {
@@ -94,7 +94,7 @@ class Program
             {
                 if (content == "")
                 {
-                    Console.Error.WriteLine("There are no contents.");
+                    Console.Error.WriteLine("There are no contents to copy.");
                     continue;
                 }
                 ClipboardService.SetText(content);
