@@ -16,6 +16,5 @@ Options:
 ```
 
 ## Feature Plan
-- do not stdout file contents by default.
-  - always copy to clipboard
-  - add `--print-all` flag to show contents optionally.
+- add `--print-all` flag to stdout file contents
+- add `--resume -r` flag to re-copy previous copied files
