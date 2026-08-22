@@ -115,7 +115,14 @@ class Program
                 currentDir = fullPath;
                 continue;
             }
-            content += FileViewer.Show(fullPath);
+
+            string? result = FileViewer.Show(fullPath);
+            if (result != null)
+            {
+                content += result;
+                ClipboardService.SetText(content);
+                Console.WriteLine($"copy to clipboard: {selected}");
+            }
             currentDir = ".";
         }
     }

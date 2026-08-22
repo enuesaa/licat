@@ -9,18 +9,14 @@ class FileViewer
         try
         {
             var sb = new StringBuilder();
-            string header = $"# === {path} ===";
-            Console.WriteLine(header);
-            sb.AppendLine(header);
+            sb.AppendLine($"# === {path} ===");
 
             using var reader = new StreamReader(path);
             string? line;
             while ((line = reader.ReadLine()) != null)
             {
-                Console.WriteLine(line);
                 sb.AppendLine(line);
             }
-            Console.WriteLine();
             return sb.ToString();
         }
         catch (FileNotFoundException)
