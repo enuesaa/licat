@@ -40,20 +40,11 @@ class Program
         string? gitDir = Repository.Discover(rootDir);
         using var repo = gitDir != null ? new Repository(gitDir) : null;
 
-        bool showAll = false;
-
         while (true)
         {
             var entries = Directory.GetFileSystemEntries(currentDir)
                 .Select(f => Path.GetFileName(f)!)
                 .Where(f => f != ".git")
-                .Where(f =>
-                {
-                    if (showAll || repo == null) return true;
-                    string full = Path.GetFullPath(Path.Combine(currentDir, f));
-                    string relPath = Path.GetRelativePath(repo.Info.WorkingDirectory, full).Replace('\\', '/');
-                    return !repo.Ignore.IsPathIgnored(relPath);
-                })
                 .ToArray();
 
             if (entries.Length == 0)
@@ -62,33 +53,39 @@ class Program
                 Environment.Exit(1);
             }
 
+            bool IsIgnored(string name)
+            {
+                if (repo == null) return false;
+                string full = Path.GetFullPath(Path.Combine(currentDir, name));
+                string relPath = Path.GetRelativePath(repo.Info.WorkingDirectory, full).Replace('\\', '/');
+                return repo.Ignore.IsPathIgnored(relPath);
+            }
+
             var dirs = entries
                 .Where(e => Directory.Exists(Path.Combine(currentDir, e)))
                 .OrderBy(e => e)
-                .Select(e => (Name: e + "/", IsDir: true));
+                .Select(e => (Name: e + "/", IsDir: true, IsIgnored: IsIgnored(e)));
             var files = entries
                 .Where(e => !Directory.Exists(Path.Combine(currentDir, e)))
                 .OrderBy(e => e)
-                .Select(e => (Name: e, IsDir: false));
+                .Select(e => (Name: e, IsDir: false, IsIgnored: IsIgnored(e)));
 
-            var items = dirs.Concat(files).ToList();
+            var all = dirs.Concat(files);
+            var notIgnored = all.Where(i => !i.IsIgnored);
+            var ignored = all.Where(i => i.IsIgnored);
+
+            var items = notIgnored.Concat(ignored).ToList();
             if (currentDir != ".")
             {
-                items.Insert(0, (BackCommand, true));
+                items.Insert(0, (BackCommand, true, false));
             }
-            items.Add((CopyCommand, false));
-            items.Add((ShowAllCommand, false));
+            items.Add((CopyCommand, false, false));
 
             var selected = Menu.Select(items, "Select");
 
             if (selected == null)
             {
                 break;
-            }
-            if (selected == ShowAllCommand)
-            {
-                showAll = !showAll;
-                continue;
             }
             if (selected == CopyCommand)
             {

@@ -4,7 +4,7 @@ using System.Linq;
 
 static class Menu
 {
-    public static string? Select(List<(string Name, bool IsDir)> items, string title)
+    public static string? Select(List<(string Name, bool IsDir, bool IsIgnored)> items, string title)
     {
         string filter = "";
         int index = 0;
@@ -91,7 +91,7 @@ static class Menu
         }
     }
 
-    static int Render(List<(string Name, bool IsDir)> filtered, int index, string title, string filter)
+    static int Render(List<(string Name, bool IsDir, bool IsIgnored)> filtered, int index, string title, string filter)
     {
         int lines = 0;
         Console.WriteLine($"{title}: {filter}");
@@ -106,11 +106,11 @@ static class Menu
         {
             for (int i = 0; i < filtered.Count; i++)
             {
-                var (name, isDir) = filtered[i];
+                var (name, isDir, isIgnored) = filtered[i];
                 Console.Write(i == index ? "> " : "  ");
-                if (isDir) Console.ForegroundColor = ConsoleColor.Cyan;
+                if (isIgnored) Console.ForegroundColor = ConsoleColor.DarkGray;
+                else if (isDir) Console.ForegroundColor = ConsoleColor.Cyan;
                 else if (name == "@c") Console.ForegroundColor = ConsoleColor.DarkYellow;
-                else if (name == "@showall") Console.ForegroundColor = ConsoleColor.DarkYellow;
                 Console.Write(name);
                 Console.ResetColor();
                 Console.WriteLine();
