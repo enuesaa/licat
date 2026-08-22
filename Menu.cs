@@ -4,7 +4,7 @@ using System.Linq;
 
 static class Menu
 {
-    public static string? Select(
+    public static (string? Name, bool Copy) Select(
         List<(string Name, bool IsDir, bool IsIgnored, string Key)> items,
         List<string> checkedKeys)
     {
@@ -37,10 +37,10 @@ static class Menu
                         break;
                     case ConsoleKey.Escape:
                         Console.Write($"\x1b[{height}F\x1b[0J");
-                        return null;
-                    case ConsoleKey.Q:
+                        return (null, false);
+                    case ConsoleKey.C:
                         Console.Write($"\x1b[{height}F\x1b[0J");
-                        return null;
+                        return (null, true);
                     case ConsoleKey.Spacebar:
                         ToggleCheck(items, index, checkedKeys);
                         break;
@@ -51,7 +51,7 @@ static class Menu
                             if (item.IsDir)
                             {
                                 Console.Write($"\x1b[{height}F\x1b[0J");
-                                return item.Name;
+                                return (item.Name, false);
                             }
                             ToggleCheck(items, index, checkedKeys);
                         }
@@ -75,14 +75,6 @@ static class Menu
         {
             checkedKeys.Add(item.Key);
         }
-
-        string content = "";
-        foreach (var path in checkedKeys)
-        {
-            string? result = FileViewer.Show(path);
-            if (result != null) content += result;
-        }
-        TextCopy.ClipboardService.SetText(content);
     }
 
     static int Render(List<(string Name, bool IsDir, bool IsIgnored, string Key)> items, int index, List<string> checkedKeys)
@@ -106,15 +98,10 @@ static class Menu
             Console.WriteLine();
             lines++;
         }
-
-        if (checkedKeys.Count > 0)
-        {
-            Console.WriteLine($"{checkedKeys.Count} file(s) copied to clipboard");
-            lines++;
-        }
-
+        Console.WriteLine("");
+        lines++;
         Console.ForegroundColor = ConsoleColor.DarkGray;
-        Console.WriteLine("q: quit");
+        Console.WriteLine("c: copy to clipboard");
         Console.ResetColor();
         lines++;
 

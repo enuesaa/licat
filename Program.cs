@@ -42,7 +42,7 @@ class Program
         {
             var entries = Directory.GetFileSystemEntries(currentDir)
                 .Select(f => Path.GetFileName(f)!)
-                .Where(f => f != ".git")
+                .Where(f => f != ".git" && f != ".DS_Store")
                 .ToArray();
 
             if (entries.Length == 0)
@@ -78,8 +78,20 @@ class Program
                 items.Insert(0, (BackCommand, true, false, ""));
             }
 
-            var selected = Menu.Select(items, checkedKeys);
+            var (selected, copy) = Menu.Select(items, checkedKeys);
 
+            if (copy)
+            {
+                string content = "";
+                foreach (var path in checkedKeys)
+                {
+                    string? result = FileViewer.Show(path);
+                    if (result != null) content += result;
+                }
+                ClipboardService.SetText(content);
+                Console.WriteLine($"copied {checkedKeys.Count} file(s) to clipboard");
+                break;
+            }
             if (selected == null)
             {
                 break;
