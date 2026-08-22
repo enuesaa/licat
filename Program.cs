@@ -10,8 +10,6 @@ using TextCopy;
 class Program
 {
     const string BackCommand = "..";
-    const string CopyCommand = "@c";
-    const string ShowAllCommand = "@showall";
 
     static int Main(string[] args)
     {
@@ -35,9 +33,8 @@ class Program
 
         string content = "";
         string currentDir = ".";
-        string rootDir = Path.GetFullPath(".");
 
-        string? gitDir = Repository.Discover(rootDir);
+        string? gitDir = Repository.Discover(Path.GetFullPath("."));
         using var repo = gitDir != null ? new Repository(gitDir) : null;
 
         while (true)
@@ -71,31 +68,19 @@ class Program
                 .Select(e => (Name: e, IsDir: false, IsIgnored: IsIgnored(e)));
 
             var all = dirs.Concat(files);
-            var notIgnored = all.Where(i => !i.IsIgnored);
-            var ignored = all.Where(i => i.IsIgnored);
+            var items = all.Where(i => !i.IsIgnored)
+                .Concat(all.Where(i => i.IsIgnored))
+                .ToList();
 
-            var items = notIgnored.Concat(ignored).ToList();
             if (currentDir != ".")
             {
                 items.Insert(0, (BackCommand, true, false));
             }
-            items.Add((CopyCommand, false, false));
 
             var selected = Menu.Select(items, "Select");
 
             if (selected == null)
             {
-                break;
-            }
-            if (selected == CopyCommand)
-            {
-                if (content == "")
-                {
-                    Console.Error.WriteLine("There are no contents to copy.");
-                    continue;
-                }
-                ClipboardService.SetText(content);
-                Console.WriteLine("Copied to clipboard");
                 break;
             }
             if (selected == BackCommand)
