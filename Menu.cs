@@ -4,9 +4,10 @@ using System.Linq;
 
 static class Menu
 {
-    public static string? Select(List<(string Name, bool IsDir, bool IsIgnored)> items, string title)
+    public static string? Select(
+        List<(string Name, bool IsDir, bool IsIgnored, string Key)> items,
+        List<string> checkedKeys)
     {
-        string filter = "";
         int index = 0;
         int height = 0;
         bool firstRender = true;
@@ -15,10 +16,7 @@ static class Menu
         {
             while (true)
             {
-                var filtered = items
-                    .Where(i => i.Name.Contains(filter, StringComparison.OrdinalIgnoreCase))
-                    .ToList();
-                if (index >= filtered.Count) index = Math.Max(0, filtered.Count - 1);
+                if (index >= items.Count) index = Math.Max(0, items.Count - 1);
 
                 if (!firstRender)
                 {
@@ -26,60 +24,36 @@ static class Menu
                 }
                 firstRender = false;
 
-                height = Render(filtered, index, title, filter);
+                height = Render(items, index, checkedKeys);
 
                 var key = Console.ReadKey(intercept: true);
                 switch (key.Key)
                 {
                     case ConsoleKey.UpArrow:
-                        if (filtered.Count > 0) index = (index - 1 + filtered.Count) % filtered.Count;
+                        if (items.Count > 0) index = (index - 1 + items.Count) % items.Count;
                         break;
                     case ConsoleKey.DownArrow:
-                        if (filtered.Count > 0) index = (index + 1) % filtered.Count;
-                        break;
-                    case ConsoleKey.Backspace:
-                        if (filter.Length > 0)
-                        {
-                            filter = filter[..^1];
-                            index = 0;
-                        }
+                        if (items.Count > 0) index = (index + 1) % items.Count;
                         break;
                     case ConsoleKey.Escape:
-                        if (filter.Length > 0)
-                        {
-                            filter = "";
-                            index = 0;
-                        }
-                        else
-                        {
-                            Console.Write($"\x1b[{height}F\x1b[0J");
-                            return null;
-                        }
+                        Console.Write($"\x1b[{height}F\x1b[0J");
+                        return null;
+                    case ConsoleKey.Q:
+                        Console.Write($"\x1b[{height}F\x1b[0J");
+                        return null;
+                    case ConsoleKey.Spacebar:
+                        ToggleCheck(items, index, checkedKeys);
                         break;
                     case ConsoleKey.Enter:
-                        if (filtered.Count > 0)
+                        if (items.Count > 0)
                         {
-                            Console.Write($"\x1b[{height}F\x1b[0J");
-                            return filtered[index].Name;
-                        }
-                        break;
-                    default:
-                        if (!char.IsControl(key.KeyChar))
-                        {
-                            if (key.KeyChar == '/')
+                            var item = items[index];
+                            if (item.IsDir)
                             {
-                                var match = items.FirstOrDefault(i =>
-                                    i.IsDir && string.Equals(i.Name.TrimEnd('/'), filter, StringComparison.OrdinalIgnoreCase));
-
-                                if (match.Name != null)
-                                {
-                                    Console.Write($"\x1b[{height}F\x1b[0J");
-                                    return match.Name;
-                                }
+                                Console.Write($"\x1b[{height}F\x1b[0J");
+                                return item.Name;
                             }
-
-                            filter += key.KeyChar;
-                            index = 0;
+                            ToggleCheck(items, index, checkedKeys);
                         }
                         break;
                 }
@@ -91,32 +65,58 @@ static class Menu
         }
     }
 
-    static int Render(List<(string Name, bool IsDir, bool IsIgnored)> filtered, int index, string title, string filter)
+    static void ToggleCheck(List<(string Name, bool IsDir, bool IsIgnored, string Key)> items, int index, List<string> checkedKeys)
+    {
+        if (items.Count == 0) return;
+        var item = items[index];
+        if (item.IsDir || item.Key == "") return;
+
+        if (!checkedKeys.Remove(item.Key))
+        {
+            checkedKeys.Add(item.Key);
+        }
+
+        string content = "";
+        foreach (var path in checkedKeys)
+        {
+            string? result = FileViewer.Show(path);
+            if (result != null) content += result;
+        }
+        TextCopy.ClipboardService.SetText(content);
+    }
+
+    static int Render(List<(string Name, bool IsDir, bool IsIgnored, string Key)> items, int index, List<string> checkedKeys)
     {
         int lines = 0;
-        Console.WriteLine($"{title}: {filter}");
-        lines++;
 
-        if (filtered.Count == 0)
+        for (int i = 0; i < items.Count; i++)
         {
-            Console.WriteLine("  no matches");
+            var (name, isDir, isIgnored, key) = items[i];
+            Console.Write(i == index ? "> " : "  ");
+
+            if (!isDir)
+            {
+                Console.Write(checkedKeys.Contains(key) ? "[x] " : "[ ] ");
+            }
+
+            if (isIgnored) Console.ForegroundColor = ConsoleColor.DarkGray;
+            else if (isDir) Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write(name);
+            Console.ResetColor();
+            Console.WriteLine();
             lines++;
         }
-        else
+
+        if (checkedKeys.Count > 0)
         {
-            for (int i = 0; i < filtered.Count; i++)
-            {
-                var (name, isDir, isIgnored) = filtered[i];
-                Console.Write(i == index ? "> " : "  ");
-                if (isIgnored) Console.ForegroundColor = ConsoleColor.DarkGray;
-                else if (isDir) Console.ForegroundColor = ConsoleColor.Cyan;
-                else if (name == "@c") Console.ForegroundColor = ConsoleColor.DarkYellow;
-                Console.Write(name);
-                Console.ResetColor();
-                Console.WriteLine();
-                lines++;
-            }
+            Console.WriteLine($"{checkedKeys.Count} file(s) copied to clipboard");
+            lines++;
         }
+
+        Console.ForegroundColor = ConsoleColor.DarkGray;
+        Console.WriteLine("q: quit");
+        Console.ResetColor();
+        lines++;
 
         return lines;
     }

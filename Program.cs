@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Help;
 using System.Globalization;
@@ -31,8 +32,8 @@ class Program
         // show cursor after ctrl+c
         Console.CancelKeyPress += (_, _) => Console.CursorVisible = true;
 
-        string content = "";
         string currentDir = ".";
+        var checkedKeys = new List<string>();
 
         string? gitDir = Repository.Discover(Path.GetFullPath("."));
         using var repo = gitDir != null ? new Repository(gitDir) : null;
@@ -61,11 +62,11 @@ class Program
             var dirs = entries
                 .Where(e => Directory.Exists(Path.Combine(currentDir, e)))
                 .OrderBy(e => e)
-                .Select(e => (Name: e + "/", IsDir: true, IsIgnored: IsIgnored(e)));
+                .Select(e => (Name: e + "/", IsDir: true, IsIgnored: IsIgnored(e), Key: ""));
             var files = entries
                 .Where(e => !Directory.Exists(Path.Combine(currentDir, e)))
                 .OrderBy(e => e)
-                .Select(e => (Name: e, IsDir: false, IsIgnored: IsIgnored(e)));
+                .Select(e => (Name: e, IsDir: false, IsIgnored: IsIgnored(e), Key: Path.GetFullPath(Path.Combine(currentDir, e))));
 
             var all = dirs.Concat(files);
             var items = all.Where(i => !i.IsIgnored)
@@ -74,10 +75,10 @@ class Program
 
             if (currentDir != ".")
             {
-                items.Insert(0, (BackCommand, true, false));
+                items.Insert(0, (BackCommand, true, false, ""));
             }
 
-            var selected = Menu.Select(items, "Select");
+            var selected = Menu.Select(items, checkedKeys);
 
             if (selected == null)
             {
@@ -95,17 +96,7 @@ class Program
             if (Directory.Exists(fullPath))
             {
                 currentDir = fullPath;
-                continue;
             }
-
-            string? result = FileViewer.Show(fullPath);
-            if (result != null)
-            {
-                content += result;
-                ClipboardService.SetText(content);
-                Console.WriteLine($"copy to clipboard: {selected}");
-            }
-            currentDir = ".";
         }
     }
 }
