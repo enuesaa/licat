@@ -17,4 +17,15 @@ Options:
 
 ## Feature Plan
 - add `--print-all` flag to stdout file contents
-- add `--resume -r` flag to re-copy previous copied files
+- add `--resume` flag to re-copy previous copied files
+  - saves `~/.licat/resume.json`
+
+```json
+{
+  "paths": {
+    "/Users/aaa/licat": {
+      "copied": ["Program.cs", "Menu.cs", "FileViewer.cs"]
+    }
+  }
+}
+```
