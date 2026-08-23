@@ -11,8 +11,9 @@ Usage:
   licat [options]
 
 Options:
-  -h, --help  Show help and usage information
-  --version   Show version information
+  -r, --resume  Resume previously copied file selection
+  -h, --help    Show help and usage information
+  --version     Show version information
 ```
 
 ## Feature Plan
