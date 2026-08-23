@@ -23,17 +23,24 @@ class Program
         helpOption.Aliases.Remove("-?");
         helpOption.Aliases.Remove("/?");
 
-        rootCommand.SetAction(_ => Run());
+        var resumeOption = new Option<bool>("--resume", "-r")
+        {
+            Description = "Resume previously copied file selection"
+        };
+        rootCommand.Options.Add(resumeOption);
+
+        rootCommand.SetAction(parseResult => Run(parseResult.GetValue(resumeOption)));
         return rootCommand.Parse(args).Invoke();
     }
 
-    static void Run()
+    static void Run(bool resume)
     {
         // show cursor after ctrl+c
         Console.CancelKeyPress += (_, _) => Console.CursorVisible = true;
 
         string currentDir = ".";
-        var checkedKeys = new List<string>();
+        string root = Path.GetFullPath(currentDir);
+        var checkedKeys = resume ? Resume.LoadCheckedKeys(root) : new List<string>();
 
         string? gitDir = Repository.Discover(Path.GetFullPath("."));
         using var repo = gitDir != null ? new Repository(gitDir) : null;
@@ -89,6 +96,7 @@ class Program
                     if (result != null) content += result;
                 }
                 ClipboardService.SetText(content);
+                Resume.Save(root, checkedKeys);
                 Console.WriteLine($"copied {checkedKeys.Count} file(s) to clipboard");
                 break;
             }
