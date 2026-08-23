@@ -19,10 +19,24 @@ class PathEntry
 
 static class Resume
 {
-    static readonly JsonSerializerOptions SerializerOptions = new() { WriteIndented = true };
+    static string FilePath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".licat", "resume.json");
 
-    static string FilePath =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".licat", "resume.json");
+    static ResumeFile Load()
+    {
+        try
+        {
+            if (!File.Exists(FilePath))
+            {
+                return new ResumeFile();
+            }
+            var json = File.ReadAllText(FilePath);
+            return JsonSerializer.Deserialize<ResumeFile>(json) ?? new ResumeFile();
+        }
+        catch
+        {
+            return new ResumeFile();
+        }
+    }
 
     public static List<string> LoadCheckedKeys(string root)
     {
@@ -52,25 +66,11 @@ static class Resume
         {
             var dir = Path.GetDirectoryName(FilePath)!;
             Directory.CreateDirectory(dir);
-            File.WriteAllText(FilePath, JsonSerializer.Serialize(file, SerializerOptions));
+            File.WriteAllText(FilePath, JsonSerializer.Serialize(file, new JsonSerializerOptions { WriteIndented = true }));
         }
         catch
         {
             // コピー自体は既に成功しているので、履歴の保存失敗は無視する
-        }
-    }
-
-    static ResumeFile Load()
-    {
-        try
-        {
-            if (!File.Exists(FilePath)) return new ResumeFile();
-            var json = File.ReadAllText(FilePath);
-            return JsonSerializer.Deserialize<ResumeFile>(json) ?? new ResumeFile();
-        }
-        catch
-        {
-            return new ResumeFile();
         }
     }
 }
