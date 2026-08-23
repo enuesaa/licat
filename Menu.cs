@@ -38,23 +38,11 @@ static class Menu
                     case ConsoleKey.Escape:
                         Console.Write($"\x1b[{height}F\x1b[0J");
                         return (null, false);
-                    case ConsoleKey.C:
+                    case ConsoleKey.Enter:
                         Console.Write($"\x1b[{height}F\x1b[0J");
                         return (null, true);
                     case ConsoleKey.Spacebar:
                         ToggleCheck(items, index, checkedKeys);
-                        break;
-                    case ConsoleKey.Enter:
-                        if (items.Count > 0)
-                        {
-                            var item = items[index];
-                            if (item.IsDir)
-                            {
-                                Console.Write($"\x1b[{height}F\x1b[0J");
-                                return (item.Name, false);
-                            }
-                            ToggleCheck(items, index, checkedKeys);
-                        }
                         break;
                 }
             }
@@ -101,7 +89,7 @@ static class Menu
         Console.WriteLine("");
         lines++;
         Console.ForegroundColor = ConsoleColor.DarkGray;
-        Console.WriteLine("c: copy to clipboard");
+        Console.WriteLine("enter: copy to clipboard");
         Console.ResetColor();
         lines++;
 
