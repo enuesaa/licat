@@ -9,7 +9,8 @@ class FileViewer
         try
         {
             var sb = new StringBuilder();
-            sb.AppendLine($"# === {path} ===");
+            string displayPath = Path.GetFileName(path);
+            sb.AppendLine($"# === {displayPath} ===");
 
             using var reader = new StreamReader(path);
             string? line;
