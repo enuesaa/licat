@@ -4,7 +4,7 @@ using System.Linq;
 
 static class Menu
 {
-    public static (string? Name, bool Copy, bool SelectAll) Select(
+    public static (string? Name, bool Copy, bool SelectAll, bool GoBack) Select(
         List<(string Name, bool IsDir, bool IsIgnored, string Key)> items,
         List<string> checkedKeys)
     {
@@ -35,15 +35,18 @@ static class Menu
                     case ConsoleKey.DownArrow:
                         if (items.Count > 0) index = (index + 1) % items.Count;
                         break;
+                    case ConsoleKey.LeftArrow:
+                        Console.Write($"\x1b[{height}F\x1b[0J");
+                        return (null, false, false, true);
                     case ConsoleKey.Escape:
                         Console.Write($"\x1b[{height}F\x1b[0J");
-                        return (null, false, false);
+                        return (null, false, false, false);
                     case ConsoleKey.C:
                         Console.Write($"\x1b[{height}F\x1b[0J");
-                        return (null, true, false);
+                        return (null, true, false, false);
                     case ConsoleKey.A:
                         Console.Write($"\x1b[{height}F\x1b[0J");
-                        return (null, false, true);
+                        return (null, false, true, false);
                     case ConsoleKey.Spacebar:
                         ToggleCheck(items, index, checkedKeys);
                         break;
@@ -54,7 +57,7 @@ static class Menu
                             if (item.IsDir)
                             {
                                 Console.Write($"\x1b[{height}F\x1b[0J");
-                                return (item.Name, false, false);
+                                return (item.Name, false, false, false);
                             }
                             ToggleCheck(items, index, checkedKeys);
                         }
@@ -104,7 +107,7 @@ static class Menu
         Console.WriteLine("");
         lines++;
         Console.ForegroundColor = ConsoleColor.DarkGray;
-        Console.WriteLine("c: copy to clipboard, a: select all");
+        Console.WriteLine("c: copy to clipboard, a: select all, ←: parent directory");
         Console.ResetColor();
         lines++;
 

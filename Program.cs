@@ -104,12 +104,15 @@ class Program
                 .Concat(all.Where(i => i.IsIgnored))
                 .ToList();
 
-            if (currentDir != ".")
-            {
-                items.Insert(0, (BackCommand, true, false, ""));
-            }
+            var (selected, copy, selectAll, goBack) = Menu.Select(items, checkedKeys);
 
-            var (selected, copy, selectAll) = Menu.Select(items, checkedKeys);
+            if (goBack)
+            {
+                currentDir = Path.GetDirectoryName(currentDir) is { Length: > 0 } parent
+                    ? parent
+                    : ".";
+                continue;
+            }
 
             if (selectAll)
             {
@@ -136,13 +139,6 @@ class Program
             if (selected == null)
             {
                 break;
-            }
-            if (selected == BackCommand)
-            {
-                currentDir = Path.GetDirectoryName(currentDir) is { Length: > 0 } parent
-                    ? parent
-                    : ".";
-                continue;
             }
 
             string fullPath = Path.Combine(currentDir, selected.TrimEnd('/'));
