@@ -45,6 +45,36 @@ class Program
         string? gitDir = Repository.Discover(Path.GetFullPath("."));
         using var repo = gitDir != null ? new Repository(gitDir) : null;
 
+        bool IsIgnoredPath(string fullPath)
+        {
+            if (repo == null) return false;
+            string relPath = Path.GetRelativePath(repo.Info.WorkingDirectory, fullPath).Replace('\\', '/');
+            return repo.Ignore.IsPathIgnored(relPath);
+        }
+
+        List<string> CollectAllFiles(string dir)
+        {
+            var result = new List<string>();
+            foreach (var entry in Directory.GetFileSystemEntries(dir))
+            {
+                string name = Path.GetFileName(entry)!;
+                if (name == ".git" || name == ".DS_Store") continue;
+
+                string full = Path.GetFullPath(entry);
+                if (IsIgnoredPath(full)) continue;
+
+                if (Directory.Exists(entry))
+                {
+                    result.AddRange(CollectAllFiles(entry));
+                }
+                else
+                {
+                    result.Add(full);
+                }
+            }
+            return result;
+        }
+
         while (true)
         {
             var entries = Directory.GetFileSystemEntries(currentDir)
@@ -58,13 +88,7 @@ class Program
                 Environment.Exit(1);
             }
 
-            bool IsIgnored(string name)
-            {
-                if (repo == null) return false;
-                string full = Path.GetFullPath(Path.Combine(currentDir, name));
-                string relPath = Path.GetRelativePath(repo.Info.WorkingDirectory, full).Replace('\\', '/');
-                return repo.Ignore.IsPathIgnored(relPath);
-            }
+            bool IsIgnored(string name) => IsIgnoredPath(Path.GetFullPath(Path.Combine(currentDir, name)));
 
             var dirs = entries
                 .Where(e => Directory.Exists(Path.Combine(currentDir, e)))
@@ -85,7 +109,16 @@ class Program
                 items.Insert(0, (BackCommand, true, false, ""));
             }
 
-            var (selected, copy) = Menu.Select(items, checkedKeys);
+            var (selected, copy, selectAll) = Menu.Select(items, checkedKeys);
+
+            if (selectAll)
+            {
+                foreach (var f in CollectAllFiles(currentDir))
+                {
+                    if (!checkedKeys.Contains(f)) checkedKeys.Add(f);
+                }
+                continue;
+            }
 
             if (copy)
             {

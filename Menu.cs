@@ -4,7 +4,7 @@ using System.Linq;
 
 static class Menu
 {
-    public static (string? Name, bool Copy) Select(
+    public static (string? Name, bool Copy, bool SelectAll) Select(
         List<(string Name, bool IsDir, bool IsIgnored, string Key)> items,
         List<string> checkedKeys)
     {
@@ -37,10 +37,13 @@ static class Menu
                         break;
                     case ConsoleKey.Escape:
                         Console.Write($"\x1b[{height}F\x1b[0J");
-                        return (null, false);
+                        return (null, false, false);
                     case ConsoleKey.C:
                         Console.Write($"\x1b[{height}F\x1b[0J");
-                        return (null, true);
+                        return (null, true, false);
+                    case ConsoleKey.A:
+                        Console.Write($"\x1b[{height}F\x1b[0J");
+                        return (null, false, true);
                     case ConsoleKey.Spacebar:
                         ToggleCheck(items, index, checkedKeys);
                         break;
@@ -51,7 +54,7 @@ static class Menu
                             if (item.IsDir)
                             {
                                 Console.Write($"\x1b[{height}F\x1b[0J");
-                                return (item.Name, false);
+                                return (item.Name, false, false);
                             }
                             ToggleCheck(items, index, checkedKeys);
                         }
@@ -101,7 +104,7 @@ static class Menu
         Console.WriteLine("");
         lines++;
         Console.ForegroundColor = ConsoleColor.DarkGray;
-        Console.WriteLine("c: copy to clipboard");
+        Console.WriteLine("c: copy to clipboard, a: select all");
         Console.ResetColor();
         lines++;
 
