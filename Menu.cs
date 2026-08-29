@@ -48,9 +48,6 @@ static class Menu
                     case ConsoleKey.A:
                         Console.Write($"\x1b[{height}F\x1b[0J");
                         return (null, false, true, false);
-                    case ConsoleKey.Spacebar:
-                        ToggleCheck(items, index, checkedKeys);
-                        break;
                     case ConsoleKey.Enter:
                         if (items.Count > 0)
                         {
