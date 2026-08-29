@@ -38,6 +38,7 @@ static class Menu
                     case ConsoleKey.LeftArrow:
                         Console.Write($"\x1b[{height}F\x1b[0J");
                         return (null, false, false, true);
+                    case ConsoleKey.X:
                     case ConsoleKey.Escape:
                         Console.Write($"\x1b[{height}F\x1b[0J");
                         return (null, false, false, false);
