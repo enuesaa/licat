@@ -1,66 +1,29 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+namespace Licat;
+
+enum MenuCommand { Open, Parent, SelectAll, Copy, Exit }
+
+readonly record struct MenuResult(MenuCommand Command, Entry? Entry = null);
 
 static class Menu
 {
-    public static (string? Name, bool Copy, bool SelectAll, bool GoBack) Select(
-        List<(string Name, bool IsDir, bool IsIgnored, string Key)> items,
-        List<string> checkedKeys)
+    const string Help = "c: copy to clipboard, a: select all, ←: parent directory";
+
+    /// <summary>
+    /// Shows <paramref name="entries"/> until the user picks a command.
+    /// Toggling a file's check mark is handled here and updates <paramref name="selection"/> in place.
+    /// </summary>
+    public static MenuResult Show(IReadOnlyList<Entry> entries, Selection selection)
     {
         int index = 0;
-        int height = 0;
-        bool firstRender = true;
         Console.CursorVisible = false;
         try
         {
             while (true)
             {
-                if (index >= items.Count) index = Math.Max(0, items.Count - 1);
-
-                if (!firstRender)
-                {
-                    Console.Write($"\x1b[{height}F\x1b[0J");
-                }
-                firstRender = false;
-
-                height = Render(items, index, checkedKeys);
-
-                var key = Console.ReadKey(intercept: true);
-                switch (key.Key)
-                {
-                    case ConsoleKey.UpArrow:
-                        if (items.Count > 0) index = (index - 1 + items.Count) % items.Count;
-                        break;
-                    case ConsoleKey.DownArrow:
-                        if (items.Count > 0) index = (index + 1) % items.Count;
-                        break;
-                    case ConsoleKey.LeftArrow:
-                        Console.Write($"\x1b[{height}F\x1b[0J");
-                        return (null, false, false, true);
-                    case ConsoleKey.X:
-                    case ConsoleKey.Escape:
-                        Console.Write($"\x1b[{height}F\x1b[0J");
-                        return (null, false, false, false);
-                    case ConsoleKey.C:
-                        Console.Write($"\x1b[{height}F\x1b[0J");
-                        return (null, true, false, false);
-                    case ConsoleKey.A:
-                        Console.Write($"\x1b[{height}F\x1b[0J");
-                        return (null, false, true, false);
-                    case ConsoleKey.Enter:
-                        if (items.Count > 0)
-                        {
-                            var item = items[index];
-                            if (item.IsDir)
-                            {
-                                Console.Write($"\x1b[{height}F\x1b[0J");
-                                return (item.Name, false, false, false);
-                            }
-                            ToggleCheck(items, index, checkedKeys);
-                        }
-                        break;
-                }
+                int height = Render(entries, index, selection);
+                var result = HandleKey(Console.ReadKey(intercept: true).Key, entries, ref index, selection);
+                Erase(height);
+                if (result is { } r) return r;
             }
         }
         finally
@@ -69,46 +32,64 @@ static class Menu
         }
     }
 
-    static void ToggleCheck(List<(string Name, bool IsDir, bool IsIgnored, string Key)> items, int index, List<string> checkedKeys)
+    static MenuResult? HandleKey(ConsoleKey key, IReadOnlyList<Entry> entries, ref int index, Selection selection)
     {
-        if (items.Count == 0) return;
-        var item = items[index];
-        if (item.IsDir || item.Key == "") return;
-
-        if (!checkedKeys.Remove(item.Key))
+        int count = entries.Count;
+        switch (key)
         {
-            checkedKeys.Add(item.Key);
+            case ConsoleKey.UpArrow when count > 0:
+                index = (index - 1 + count) % count;
+                return null;
+            case ConsoleKey.DownArrow when count > 0:
+                index = (index + 1) % count;
+                return null;
+            case ConsoleKey.LeftArrow:
+                return new(MenuCommand.Parent);
+            case ConsoleKey.X:
+            case ConsoleKey.Escape:
+                return new(MenuCommand.Exit);
+            case ConsoleKey.C:
+                return new(MenuCommand.Copy);
+            case ConsoleKey.A:
+                return new(MenuCommand.SelectAll);
+            case ConsoleKey.Enter when count > 0:
+                var entry = entries[index];
+                if (entry.IsDirectory) return new(MenuCommand.Open, entry);
+                selection.Toggle(entry.FullPath);
+                return null;
+            default:
+                return null;
         }
     }
 
-    static int Render(List<(string Name, bool IsDir, bool IsIgnored, string Key)> items, int index, List<string> checkedKeys)
+    /// <returns>Number of lines written.</returns>
+    static int Render(IReadOnlyList<Entry> entries, int index, Selection selection)
     {
-        int lines = 0;
-
-        for (int i = 0; i < items.Count; i++)
+        for (int i = 0; i < entries.Count; i++)
         {
-            var (name, isDir, isIgnored, key) = items[i];
+            var entry = entries[i];
             Console.Write(i == index ? "> " : "  ");
 
-            if (!isDir)
+            if (!entry.IsDirectory)
             {
-                Console.Write(checkedKeys.Contains(key) ? "[x] " : "[ ] ");
+                Console.Write(selection.Contains(entry.FullPath) ? "[x] " : "[ ] ");
             }
 
-            if (isIgnored) Console.ForegroundColor = ConsoleColor.DarkGray;
-            else if (isDir) Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.Write(name);
+            if (entry.IsIgnored) Console.ForegroundColor = ConsoleColor.DarkGray;
+            else if (entry.IsDirectory) Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write(entry.DisplayName);
             Console.ResetColor();
             Console.WriteLine();
-            lines++;
         }
-        Console.WriteLine("");
-        lines++;
-        Console.ForegroundColor = ConsoleColor.DarkGray;
-        Console.WriteLine("c: copy to clipboard, a: select all, ←: parent directory");
-        Console.ResetColor();
-        lines++;
 
-        return lines;
+        Console.WriteLine();
+        Console.ForegroundColor = ConsoleColor.DarkGray;
+        Console.WriteLine(Help);
+        Console.ResetColor();
+
+        return entries.Count + 2;
     }
+
+    /// <summary>Moves the cursor up <paramref name="lines"/> lines and clears to the end of the screen.</summary>
+    static void Erase(int lines) => Console.Write($"\x1b[{lines}F\x1b[0J");
 }
