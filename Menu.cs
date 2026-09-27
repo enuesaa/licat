@@ -8,10 +8,6 @@ static class Menu
 {
     const string Help = "c: copy to clipboard, a: select all, ←: parent directory";
 
-    /// <summary>
-    /// Shows <paramref name="entries"/> until the user picks a command.
-    /// Toggling a file's check mark is handled here and updates <paramref name="selection"/> in place.
-    /// </summary>
     public static MenuResult Show(IReadOnlyList<Entry> entries, Selection selection)
     {
         int index = 0;
@@ -62,7 +58,6 @@ static class Menu
         }
     }
 
-    /// <returns>Number of lines written.</returns>
     static int Render(IReadOnlyList<Entry> entries, int index, Selection selection)
     {
         for (int i = 0; i < entries.Count; i++)
@@ -90,6 +85,5 @@ static class Menu
         return entries.Count + 2;
     }
 
-    /// <summary>Moves the cursor up <paramref name="lines"/> lines and clears to the end of the screen.</summary>
     static void Erase(int lines) => Console.Write($"\x1b[{lines}F\x1b[0J");
 }

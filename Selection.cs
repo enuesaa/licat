@@ -2,13 +2,10 @@ using System.Collections;
 
 namespace Licat;
 
-/// <summary>Checked file paths, kept in the order they were checked.</summary>
 sealed class Selection : IEnumerable<string>
 {
     readonly List<string> _order = [];
     readonly HashSet<string> _set = [];
-
-    public Selection() { }
 
     public Selection(IEnumerable<string> paths) => AddRange(paths);
 

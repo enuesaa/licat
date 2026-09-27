@@ -2,18 +2,16 @@ using TextCopy;
 
 namespace Licat;
 
-/// <summary>Interactive browse loop: navigate directories, select files, copy them.</summary>
 sealed class App(string root, FileTree tree, Selection selection, ResumeStore store)
 {
-    string? _currentDir;
-
-    string CurrentDir => _currentDir ?? root;
+    readonly string _root = root;
+    string _currentDir = root;
 
     public int Run()
     {
         while (true)
         {
-            var entries = tree.List(CurrentDir);
+            var entries = tree.List(_currentDir);
             if (entries.Count == 0)
             {
                 Console.Error.WriteLine("There are no files here.");
@@ -30,7 +28,7 @@ sealed class App(string root, FileTree tree, Selection selection, ResumeStore st
                     GoToParent();
                     break;
                 case MenuCommand.SelectAll:
-                    selection.AddRange(tree.EnumerateFiles(CurrentDir));
+                    selection.AddRange(tree.EnumerateFiles(_currentDir));
                     break;
                 case MenuCommand.Copy:
                     Copy();
@@ -43,15 +41,14 @@ sealed class App(string root, FileTree tree, Selection selection, ResumeStore st
 
     void GoToParent()
     {
-        // never navigate above the directory licat was started in
-        if (CurrentDir == root) return;
-        _currentDir = Path.GetDirectoryName(CurrentDir);
+        if (_currentDir == _root) return;
+        _currentDir = Path.GetDirectoryName(_currentDir)!;
     }
 
     void Copy()
     {
         ClipboardService.SetText(ContentBuilder.Build(selection));
-        store.Save(root, selection);
+        store.Save(_root, selection);
         Console.WriteLine($"copied {selection.Count} file(s) to clipboard");
     }
 }

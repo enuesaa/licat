@@ -2,7 +2,6 @@ using System.Text;
 
 namespace Licat;
 
-/// <summary>Concatenates files into a single text, each preceded by a header line.</summary>
 static class ContentBuilder
 {
     public static string Build(IEnumerable<string> paths)
@@ -16,10 +15,6 @@ static class ContentBuilder
                 var lines = File.ReadAllLines(path);
                 sb.AppendLine($"# === {Path.GetFileName(path)} ===");
                 foreach (var line in lines) sb.AppendLine(line);
-            }
-            catch (FileNotFoundException)
-            {
-                Console.Error.WriteLine($"file not found: {path}");
             }
             catch (Exception ex)
             {

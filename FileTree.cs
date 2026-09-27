@@ -7,7 +7,6 @@ sealed record Entry(string Name, string FullPath, bool IsDirectory, bool IsIgnor
     public string DisplayName => IsDirectory ? Name + "/" : Name;
 }
 
-/// <summary>Lists the file system, honoring .gitignore when inside a git repository.</summary>
 sealed class FileTree : IDisposable
 {
     static readonly HashSet<string> HiddenNames = [".git", ".DS_Store"];
@@ -22,7 +21,6 @@ sealed class FileTree : IDisposable
         return new FileTree(gitDir != null ? new Repository(gitDir) : null);
     }
 
-    /// <summary>Direct children of <paramref name="dir"/>: non-ignored first, then directories before files, then by name.</summary>
     public IReadOnlyList<Entry> List(string dir) =>
         Children(dir)
             .Select(path => new Entry(
@@ -35,7 +33,6 @@ sealed class FileTree : IDisposable
             .ThenBy(e => e.Name)
             .ToList();
 
-    /// <summary>All non-ignored files under <paramref name="dir"/>, recursively.</summary>
     public IEnumerable<string> EnumerateFiles(string dir)
     {
         foreach (var path in Children(dir))

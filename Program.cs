@@ -8,7 +8,6 @@ static class Program
 {
     static int Main(string[] args)
     {
-        // do not translate
         CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
 
         var rootCommand = new RootCommand("licat --- browse files and copy their contents");
@@ -29,12 +28,11 @@ static class Program
 
     static int Run(bool resume)
     {
-        // show cursor after ctrl+c
         Console.CancelKeyPress += (_, _) => Console.CursorVisible = true;
 
         string root = Path.GetFullPath(".");
         var store = ResumeStore.Default;
-        var selection = resume ? new Selection(store.Load(root)) : new Selection();
+        var selection = new Selection(resume ? store.Load(root) : []);
 
         using var tree = FileTree.Open(root);
         return new App(root, tree, selection, store).Run();

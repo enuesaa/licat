@@ -3,10 +3,6 @@ using System.Text.Json.Serialization;
 
 namespace Licat;
 
-/// <summary>
-/// Persists the last copied selection per root directory in <c>~/.licat/resume.json</c>.
-/// Paths are stored relative to the root.
-/// </summary>
 sealed class ResumeStore(string filePath)
 {
     static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
@@ -14,7 +10,6 @@ sealed class ResumeStore(string filePath)
     public static ResumeStore Default { get; } = new(Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".licat", "resume.json"));
 
-    /// <summary>Absolute paths of previously copied files under <paramref name="root"/> that still exist.</summary>
     public IEnumerable<string> Load(string root)
     {
         if (!Read().Paths.TryGetValue(root, out var entry)) return [];
@@ -40,7 +35,7 @@ sealed class ResumeStore(string filePath)
         }
         catch
         {
-            // コピー自体は既に成功しているので、履歴の保存失敗は無視する
+            // the copy already succeeded; losing the history is not worth failing for
         }
     }
 
