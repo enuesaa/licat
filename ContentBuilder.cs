@@ -4,7 +4,7 @@ namespace Licat;
 
 static class ContentBuilder
 {
-    public static string Build(IEnumerable<string> paths)
+    public static string Build(string root, IEnumerable<string> paths)
     {
         var sb = new StringBuilder();
         foreach (var path in paths)
@@ -13,7 +13,8 @@ static class ContentBuilder
             {
                 // read fully before appending so a failure never leaves a partial file behind
                 var lines = File.ReadAllLines(path);
-                sb.AppendLine($"# === {Path.GetFileName(path)} ===");
+                var rel = Path.GetRelativePath(root, path).Replace('\\', '/');
+                sb.AppendLine($"# === {rel} ===");
                 foreach (var line in lines) sb.AppendLine(line);
             }
             catch (Exception ex)

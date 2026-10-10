@@ -47,7 +47,7 @@ sealed class App(string root, FileTree tree, Selection selection, ResumeStore st
 
     void Copy()
     {
-        ClipboardService.SetText(ContentBuilder.Build(selection));
+        ClipboardService.SetText(ContentBuilder.Build(_root, selection));
         store.Save(_root, selection);
         Console.WriteLine($"copied {selection.Count} file(s) to clipboard");
     }
