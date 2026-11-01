@@ -6,7 +6,7 @@ readonly record struct MenuResult(MenuCommand Command, Entry? Entry = null);
 
 static class Menu
 {
-    const string Help = "c: copy to clipboard, a: select all, ←: parent directory";
+    const string Help = "enter: copy to clipboard, a: select all, ←: parent directory";
 
     public static MenuResult Show(IReadOnlyList<Entry> entries, Selection selection)
     {
@@ -41,14 +41,13 @@ static class Menu
                 return null;
             case ConsoleKey.LeftArrow:
                 return new(MenuCommand.Parent);
-            case ConsoleKey.X:
             case ConsoleKey.Escape:
                 return new(MenuCommand.Exit);
-            case ConsoleKey.C:
+            case ConsoleKey.Enter:
                 return new(MenuCommand.Copy);
             case ConsoleKey.A:
                 return new(MenuCommand.SelectAll);
-            case ConsoleKey.Enter when count > 0:
+            case ConsoleKey.Spacebar when count > 0:
                 var entry = entries[index];
                 if (entry.IsDirectory) return new(MenuCommand.Open, entry);
                 selection.Toggle(entry.FullPath);
