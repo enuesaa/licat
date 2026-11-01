@@ -1,5 +1,8 @@
 # licat
-toyapp. browse files and copy their contents.
+toy app.   
+browse files and copy their contents.
+
+[![ci](https://github.com/enuesaa/licat/actions/workflows/ci.yml/badge.svg)](https://github.com/enuesaa/licat/actions/workflows/ci.yml)
 
 ## Usage
 ```bash
@@ -14,19 +17,4 @@ Options:
   -r, --resume  Resume previously copied file selection
   -h, --help    Show help and usage information
   --version     Show version information
-```
-
-## Feature Plan
-- add `--print-all` flag to stdout file contents
-- add `--resume` flag to re-copy previous copied files
-  - saves `~/.licat/resume.json`
-
-```json
-{
-  "paths": {
-    "/Users/aaa/licat": {
-      "copied": ["Program.cs", "Menu.cs", "FileViewer.cs"]
-    }
-  }
-}
 ```
