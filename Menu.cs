@@ -60,6 +60,13 @@ static class Menu
 
     static int Render(IReadOnlyList<Entry> entries, int index, Selection selection)
     {
+        if (entries.Count == 0)
+        {
+            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.WriteLine("  (empty)");
+            Console.ResetColor();
+        }
+
         for (int i = 0; i < entries.Count; i++)
         {
             var entry = entries[i];
@@ -82,7 +89,7 @@ static class Menu
         Console.WriteLine(Help);
         Console.ResetColor();
 
-        return entries.Count + 2;
+        return Math.Max(entries.Count, 1) + 2;
     }
 
     static void Erase(int lines) => Console.Write($"\x1b[{lines}F\x1b[0J");

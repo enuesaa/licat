@@ -12,7 +12,7 @@ sealed class App(string root, FileTree tree, Selection selection, ResumeStore st
         while (true)
         {
             var entries = tree.List(_currentDir);
-            if (entries.Count == 0)
+            if (entries.Count == 0 && _currentDir == _root)
             {
                 Console.Error.WriteLine("There are no files here.");
                 return 1;
