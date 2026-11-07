@@ -6,7 +6,7 @@ readonly record struct MenuResult(MenuCommand Command, Entry? Entry = null);
 
 static class Menu
 {
-    const string Help = "c: copy to clipboard, ←: parent directory";
+    const string Help = "c copy | ← back | a all";
 
     public static MenuResult Show(IReadOnlyList<Entry> entries, Selection selection)
     {
