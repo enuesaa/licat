@@ -18,3 +18,14 @@ Options:
   -h, --help    Show help and usage information
   --version     Show version information
 ```
+
+## Development
+```bash
+# Dev
+dotnet run
+
+# Update dependencies
+dotnet list package --outdated
+dotnet add package <package-name>
+dotnet build
+```
