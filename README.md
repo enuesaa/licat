@@ -28,4 +28,8 @@ dotnet run
 dotnet list package --outdated
 dotnet add package <package-name>
 dotnet build
+
+# Upgrade dotnet
+brew upgrade --cask dotnet-sdk
+vim licat.csproj # change the value of <TargetFramework>net11.0</TargetFramework>
 ```
